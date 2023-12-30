@@ -1,0 +1,23 @@
+version: "2"
+
+sql:
+  - engine: "postgresql"
+    queries: "./db/query"
+    schema: "./db/migration"
+    database:
+      uri: "postgresql://root:postgres123@localhost:5432/simple_bank?sslmode=disable"
+      managed: false
+    gen:
+      go:
+        package: "db"
+        out: "./db/sqlc"
+        sql_package: "database/sql" # -> requires external library "pgx/v5"
+        emit_json_tags: true
+        emit_prepared_queries: false
+        emit_interface: false
+        emit_exact_table_names: false
+
+
+plugins: []
+rules: []
+options: {}
