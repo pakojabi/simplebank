@@ -4,8 +4,7 @@ INSERT INTO entries (
   amount
 ) VALUES (
   $1, $2
-)
-RETURNING *;
+) RETURNING *;
 
 -- name: GetEntry :one
 SELECT * FROM entries
@@ -17,13 +16,3 @@ WHERE account_id = $1
 ORDER BY id
 LIMIT $2
 OFFSET $3;
-
--- name: UpdateEntry :one
-UPDATE entries
-  set amount = $2
-WHERE id = $1
-RETURNING *;
-
--- name: DeleteEntry :exec
-DELETE FROM entries
-WHERE id = $1;

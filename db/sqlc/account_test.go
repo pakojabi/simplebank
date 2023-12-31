@@ -31,10 +31,14 @@ func createRandomAccount (t *testing.T) Account{
 }
 
 func TestCreateAccount(t *testing.T) {
+	defer cleanup()
+
 	createRandomAccount(t)
 }
 
 func TestGetAccount(t *testing.T) {
+	defer cleanup()
+
 	account1 := createRandomAccount(t)
 	account2, err  := testQueries.GetAccount(context.Background(), account1.ID)
 	require.NoError(t, err)
@@ -48,6 +52,8 @@ func TestGetAccount(t *testing.T) {
 }
 
 func TestUpdateAccount(t *testing.T) {
+	defer cleanup()
+
 	account1 := createRandomAccount(t)
 	arg := UpdateAccountParams {
 		ID: account1.ID,
@@ -66,6 +72,8 @@ func TestUpdateAccount(t *testing.T) {
 }
 
 func TestDeleteAccount(t *testing.T) {
+	defer cleanup()
+
 	account1 := createRandomAccount(t)
 	err := testQueries.DeleteAccount(context.Background(), account1.ID)
 	require.NoError(t, err)
@@ -78,6 +86,8 @@ func TestDeleteAccount(t *testing.T) {
 }
 
 func TestListAccounts(t *testing.T) {
+	defer cleanup()
+
 	for i := 0; i < 10; i++ {
 		createRandomAccount(t)
 	}

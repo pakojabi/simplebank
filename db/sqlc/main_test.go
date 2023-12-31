@@ -1,6 +1,7 @@
 package db
 
 import (
+	"context"
 	"database/sql"
 	"log"
 	"os"
@@ -10,10 +11,11 @@ import (
 )
 
 var testQueries *Queries
+var cleanup func()
 
 const (
 	dbDriver = "postgres"
-	dbSource = "postgresql://root:postgres123@localhost:5432/simple_bank?sslmode=disable"
+	dbSource = "postgresql://root:postgres123@localhost:5432/simple_bank_test?sslmode=disable"
 )
 
 func TestMain(m *testing.M){
@@ -22,5 +24,14 @@ func TestMain(m *testing.M){
 		log.Fatal("cannot connect to db:", err)
 	}
 	testQueries = New(conn)
+	
+	cleanup = func() {
+		testQueries.db.ExecContext(context.Background(), "TRUNCATE TABLE transfers")
+		testQueries.db.ExecContext(context.Background(), "TRUNCATE TABLE entries")
+		_, err2 := testQueries.db.ExecContext(context.Background(), "TRUNCATE TABLE accounts CASCADE")
+		if err2 != nil {
+			log.Fatal("cannot truncate accounts: ", err2)
+		}
+	}
 	os.Exit(m.Run())
 }
