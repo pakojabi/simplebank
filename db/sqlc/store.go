@@ -99,36 +99,42 @@ func (store *Store) TransferTx(ctx context.Context, arg TransferTxParams) (Trans
 		// if err != nil {
 		// 	return err
 		// }
+		
+		if arg.FromAccountID < arg.ToAccountID {
+			result.FromAccount, err = q.AddAccountBalance(ctx, AddAccountBalanceParams{
+				ID: arg.FromAccountID,
+				Amount: - arg.Amount,
+			})
+			if err != nil {
+				return err
+			}
+	
+	
+			result.ToAccount, err = q.AddAccountBalance(ctx, AddAccountBalanceParams{
+				ID: arg.ToAccountID,
+				Amount: arg.Amount,
+			})
+			if err != nil {
+				return err
+			}
+		} else {
+			result.ToAccount, err = q.AddAccountBalance(ctx, AddAccountBalanceParams{
+				ID: arg.ToAccountID,
+				Amount: arg.Amount,
+			})
+			if err != nil {
+				return err
+			}
 
-		result.FromAccount, err = q.AddAccountBalance(ctx, AddAccountBalanceParams{
-			ID: arg.FromAccountID,
-			Amount: - arg.Amount,
-		})
-		if err != nil {
-			return err
+			result.FromAccount, err = q.AddAccountBalance(ctx, AddAccountBalanceParams{
+				ID: arg.FromAccountID,
+				Amount: - arg.Amount,
+			})
+			if err != nil {
+				return err
+			}
 		}
 
-
-		// account2, err := q.GetAccountForUpdate(ctx, arg.ToAccountID) // blocks selects until transactions are complete.
-		// if err != nil {
-		// 	return err
-		// }
-
-		// result.ToAccount, err = q.UpdateAccount(ctx, UpdateAccountParams{
-		// 	ID: arg.ToAccountID,
-		// 	Balance: account2.Balance + arg.Amount,
-		// })
-		// if err != nil {
-		// 	return err
-		// }
-
-		result.ToAccount, err = q.AddAccountBalance(ctx, AddAccountBalanceParams{
-			ID: arg.ToAccountID,
-			Amount: arg.Amount,
-		})
-		if err != nil {
-			return err
-		}
 
 		return nil
 	})
