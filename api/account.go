@@ -84,3 +84,61 @@ func (server *Server) listAccounts(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, accounts)
 }
+
+type updateAccountUri struct {
+	ID int64 `uri:"id" binding:"required,min=1"`
+}
+
+type updateAccountBody struct {
+	NewBalance int64 `json:"new_balance" binding:"required,min=1"`
+}
+
+func (server *Server) updateAccount(ctx *gin.Context) {
+	var uri updateAccountUri
+	var body updateAccountBody
+	if err := ctx.ShouldBindUri(&uri); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	account, err := server.store.UpdateAccount(ctx, db.UpdateAccountParams{
+		ID: uri.ID,
+		Balance: body.NewBalance,
+	})
+	if err != nil {
+		if err == sql.ErrNoRows {
+			ctx.JSON(http.StatusNotFound, errorResponse(err))
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+	ctx.JSON(http.StatusOK, account)
+}
+
+type deleteAccountUri struct {
+	ID int64 `uri:"id" binding:"required,min=1"`
+}
+
+func (server *Server) deleteAccount(ctx *gin.Context) {
+	var uri deleteAccountUri
+	if err := ctx.ShouldBindUri(&uri); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+	if err := server.store.DeleteAccount(ctx, uri.ID); err != nil {
+		if err == sql.ErrNoRows {
+			ctx.JSON(http.StatusNotFound, errorResponse(err))
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+	ctx.JSON(http.StatusNoContent, nil)
+
+}
