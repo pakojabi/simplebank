@@ -24,6 +24,8 @@ func NewServer(store db.Store) *Server {
 
 	router.POST("/transfers", server.createTransfer)
 
+	router.SetTrustedProxies(nil)
+
 	server.router = router
 	return server
 }
