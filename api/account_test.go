@@ -520,12 +520,6 @@ func randomAccount() db.Account {
 	}
 }
 
-func getReaderFor[T any](t *testing.T, request T) io.Reader {
-	buf, err := json.Marshal(request)
-	require.NoError(t, err)
-	return bytes.NewReader(buf)
-}
-
 func requireBodyMatchAccount(t *testing.T, body *bytes.Buffer, account db.Account) {
 	data, err := io.ReadAll(body)
 	require.NoError(t, err)
