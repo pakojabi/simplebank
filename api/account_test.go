@@ -11,6 +11,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/lib/pq"
 	mockdb "github.com/pakojabi/simplebank/db/mock"
 	db "github.com/pakojabi/simplebank/db/sqlc"
 	"github.com/pakojabi/simplebank/util"
@@ -157,6 +158,34 @@ func TestCreateAccount(t *testing.T) {
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder, expectedOwner, expectedCurrency string){
 				require.Equal(t, http.StatusInternalServerError, recorder.Code)
+			},
+		},
+		{
+			name: "Unexisting owner",
+			owner: "owner",
+			currency: "EUR",
+			buildStubs: func(store *mockdb.MockStore, expectedOwner, expectedCurrency string) {
+				store.EXPECT().
+					CreateAccount(gomock.Any(), gomock.Any()).
+					Times(1).
+					Return(db.Account{}, &pq.Error{Code: pq.ErrorCode("23503")})
+			},
+			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder, expectedOwner, expectedCurrency string){
+				require.Equal(t, http.StatusForbidden, recorder.Code)
+			},
+		},
+		{
+			name: "Duplicate account",
+			owner: "owner",
+			currency: "EUR",
+			buildStubs: func(store *mockdb.MockStore, expectedOwner, expectedCurrency string) {
+				store.EXPECT().
+					CreateAccount(gomock.Any(), gomock.Any()).
+					Times(1).
+					Return(db.Account{}, &pq.Error{Code: pq.ErrorCode("23505")})
+			},
+			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder, expectedOwner, expectedCurrency string){
+				require.Equal(t, http.StatusForbidden, recorder.Code)
 			},
 		},
 	}
