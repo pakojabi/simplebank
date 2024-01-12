@@ -34,6 +34,10 @@ func TestMain(m *testing.M){
 		if err2 != nil {
 			log.Fatal("cannot truncate accounts: ", err2)
 		}
+		_, err3 := testQueries.db.ExecContext(context.Background(), "TRUNCATE TABLE users CASCADE")
+		if err3 != nil {
+			log.Fatal("cannot truncate users: ", err3)
+		}
 	}
 	os.Exit(m.Run())
 }

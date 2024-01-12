@@ -32,7 +32,9 @@ func createTestAccount(t *testing.T, owner string, currency string, balance int6
 }
 
 func createRandomAccount (t *testing.T) Account{
-	return createTestAccount(t, util.RandomOwner(), util.RandomCurrency(), util.RandomMoney())
+	user := createRandomUser(t)
+
+	return createTestAccount(t, user.Username, util.RandomCurrency(), util.RandomMoney())
 }
 
 func TestCreateAccount(t *testing.T) {

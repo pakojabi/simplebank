@@ -64,16 +64,16 @@ func TestTransferTx(t *testing.T) {
 		require.Equal(t, -amount, fromEntry.Amount)
 		require.Equal(t, account1.ID, fromEntry.AccountID)
 
-		_, err = store.GetEntry(context.Background(), fromEntry.AccountID)
-		require.NotNil(t,err)
+		_, err = store.GetEntry(context.Background(), fromEntry.ID)
+		require.NoError(t, err)
 
 		toEntry := result.ToEntry
 		require.NotEmpty(t, toEntry)
 		require.Equal(t, amount, toEntry.Amount)
 		require.Equal(t, account2.ID, toEntry.AccountID)
 
-		_, err = store.GetEntry(context.Background(), fromEntry.AccountID)
-		require.NotNil(t, err)
+		_, err = store.GetEntry(context.Background(), toEntry.ID)
+		require.NoError(t, err)
 
 
 		// check accounts
@@ -116,8 +116,10 @@ func TestTransferTxDeadlock(t *testing.T) {
 
 	store := NewStore(testDB)
 
-	account1 := createTestAccount(t, "fulano", "USD", 100)
-	account2 := createTestAccount(t, "mengano", "USD", 100)
+	user1 := createTestUser(t, "fulano", "xyz", "fulano test", "fulano@email.com")
+	user2 := createTestUser(t, "menagno", "xyz", "mengano test", "mengano@email.com")
+	account1 := createTestAccount(t, user1.Username, "USD", 100)
+	account2 := createTestAccount(t, user2.Username, "USD", 100)
 
 	// run n concurrent transfer transactions
 	n := 10
