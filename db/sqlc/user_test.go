@@ -56,10 +56,13 @@ func createTestUser(t *testing.T, username string, hashed_password string, full_
 }
 
 func createRandomUser(t *testing.T) User {
+	hashedPassword, err := util.HashPassword(util.RandomString(6))
+	require.NoError(t, err)
+
 	return createTestUser(
 		t, 
 		util.RandomOwner(), 
-		util.RandomString(6), 
+		hashedPassword, 
 		util.RandomString(6) + " " + util.RandomString(6),
 		util.RandomString(4) + "@" + util.RandomString(5) + "." + util.RandomString(3),
 	)
