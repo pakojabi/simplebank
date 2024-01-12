@@ -4,9 +4,11 @@ import (
 	"bytes"
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"testing"
 
 	"github.com/gin-gonic/gin"
@@ -38,7 +40,14 @@ func TestCreateUser(t *testing.T) {
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().
-					CreateUser(gomock.Any(), gomock.Any()).
+					CreateUser(gomock.Any(), EqCreateUserParams(
+						db.CreateUserParams{
+							Username: user.Username,
+							Email: user.Email,
+							FullName: user.FullName,
+						},
+						password,
+					)).
 					Times(1).
 					Return(user, nil)
 			},
@@ -172,4 +181,28 @@ func requireBodyMatchUser(t *testing.T, body *bytes.Buffer, expectedUser db.User
 	require.Equal(t, expectedUser.CreatedAt, gotResponse.CreatedAt)
 	require.Equal(t, expectedUser.PasswordChangedAt, gotResponse.PasswordChangedAt)
 
+}
+
+// Custom matcher for db.CreateUserParams
+
+type eqCreateUserParamsMatcher struct {
+	arg db.CreateUserParams
+	password string
+}
+
+func EqCreateUserParams(arg db.CreateUserParams, password string) gomock.Matcher { return eqCreateUserParamsMatcher{arg, password} }
+
+func (e eqCreateUserParamsMatcher) Matches(x any) bool {
+	arg, ok := x.(db.CreateUserParams);
+	if !ok { return false }
+	
+	if err := util.CheckPassword(e.password, arg.HashedPassword); err != nil {
+		return false
+	}
+	e.arg.HashedPassword = arg.HashedPassword
+	return reflect.DeepEqual(e.arg, arg)
+}
+
+func (e eqCreateUserParamsMatcher) String() string {
+	return fmt.Sprintf("is equal to %v (%T)", e.arg, e.arg)
 }
