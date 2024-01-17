@@ -92,7 +92,7 @@ func TestGetAccount(t *testing.T) {
 			tc.buildStubs(store)
 		
 			// start test server and send request
-			server := NewServer(store)
+			server := newTestServer(t, store)
 			recorder := httptest.NewRecorder()
 		
 			url := fmt.Sprintf("/accounts/%d", tc.accountID)
@@ -199,7 +199,7 @@ func TestCreateAccount(t *testing.T) {
 			store := mockdb.NewMockStore(ctrl)
 			tc.buildStubs(store, tc.owner, tc.currency)
 
-			server := NewServer(store)
+			server := newTestServer(t, store)
 			recorder := httptest.NewRecorder()
 
 			url := "/accounts"
@@ -295,7 +295,7 @@ func TestListAccounts(t *testing.T) {
 			offset := (int64(tc.pageId - 1) * int64(tc.pageSize))
 			tc.buildStubs(store, offset, limit)
 			
-			server := NewServer(store)
+			server := newTestServer(t, store)
 			recorder := httptest.NewRecorder()
 
 			url := fmt.Sprintf("/accounts?page_id=%d&page_size=%d", tc.pageId, tc.pageSize)
@@ -412,7 +412,7 @@ func TestUpdateAccount(t *testing.T)  {
 			store := mockdb.NewMockStore(ctrl)
 			tc.buildStubs(store, tc.newBalance)
 
-			server := NewServer(store)
+			server := newTestServer(t, store)
 			recorder := httptest.NewRecorder()
 
 			url := fmt.Sprintf("/accounts/%d", tc.accountId)
@@ -497,7 +497,7 @@ func TestDeleteAccount(t *testing.T) {
 			store := mockdb.NewMockStore(ctrl)
 			tc.buildStubs(store)
 
-			server := NewServer(store)
+			server := newTestServer(t, store)
 			recorder := httptest.NewRecorder()
 
 			url := fmt.Sprintf("/accounts/%d", tc.accountID)
