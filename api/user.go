@@ -1,6 +1,7 @@
 package api
 
 import (
+	"database/sql"
 	"net/http"
 	"time"
 
@@ -14,10 +15,10 @@ type createUserRequest struct {
 	Username string `json:"username" binding:"required,alphanum"`
 	Password string `json:"password" binding:"required,min=6"`
 	FullName string `json:"full_name" binding:"required"`
-	Email	 string `json:"email" binding:"required,email"`
+	Email    string `json:"email" binding:"required,email"`
 }
 
-type createUserResponse struct {
+type userResponse struct {
 	Username          string    `json:"username"`
 	FullName          string    `json:"full_name"`
 	Email             string    `json:"email"`
@@ -25,7 +26,17 @@ type createUserResponse struct {
 	CreatedAt         time.Time `json:"created_at"`
 }
 
-func (server *Server) createUser (ctx *gin.Context) {
+func newUserResponse(user db.User) *userResponse {
+	return &userResponse{
+		Username:          user.Username,
+		FullName:          user.FullName,
+		Email:             user.Email,
+		PasswordChangedAt: user.PasswordChangedAt,
+		CreatedAt:         user.CreatedAt,
+	}
+}
+
+func (server *Server) createUser(ctx *gin.Context) {
 	var req createUserRequest
 	// validation - with the help of gin's validator
 	if err := ctx.ShouldBindJSON(&req); err != nil {
@@ -39,14 +50,14 @@ func (server *Server) createUser (ctx *gin.Context) {
 	}
 
 	arg := db.CreateUserParams{
-		Username: req.Username,
+		Username:       req.Username,
 		HashedPassword: hashedPassword,
-		FullName: req.FullName,
-		Email: req.Email,
+		FullName:       req.FullName,
+		Email:          req.Email,
 	}
 
 	user, err := server.store.CreateUser(ctx, arg)
-	
+
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
 			switch pqErr.Code.Name() {
@@ -60,12 +71,52 @@ func (server *Server) createUser (ctx *gin.Context) {
 	}
 
 	// we do not want to return the hashed password, so we use a custom response
-	rsp := createUserResponse {
-		Username: user.Username,
-		FullName: user.FullName,
-		Email: user.Email,
-		PasswordChangedAt: user.PasswordChangedAt,
-		CreatedAt: user.CreatedAt,
+	rsp := newUserResponse(user)
+	ctx.JSON(http.StatusOK, rsp)
+}
+
+type loginUserRequest struct {
+	Username string `json:"username" binding:"required,alphanum"`
+	Password string `json:"password" binding:"required,min=6"`
+}
+
+type loginUserResponse struct {
+	AccessToken string       `json:"access_token"`
+	User        userResponse `json:"user"`
+}
+
+func (server *Server) loginUser(ctx *gin.Context) {
+	var req loginUserRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
 	}
+
+	user, err := server.store.GetUser(ctx, req.Username)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			ctx.JSON(http.StatusNotFound, errorResponse(err))
+			return
+		}
+
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+	}
+
+	if err = util.CheckPassword(req.Password, user.HashedPassword); err != nil {
+		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
+		return
+	}
+
+	accessToken, err := server.tokenMaker.Make(user.Username, server.config.AccessTokenDuration)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	rsp := loginUserResponse{
+		AccessToken: accessToken,
+		User:        *newUserResponse(user),
+	}
+
 	ctx.JSON(http.StatusOK, rsp)
 }
