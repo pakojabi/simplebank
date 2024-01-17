@@ -2,16 +2,17 @@ package api
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/lib/pq"
 	db "github.com/pakojabi/simplebank/db/sqlc"
+	"github.com/pakojabi/simplebank/token"
 )
 
 type createAccountRequest struct {
-	Owner string `json:"owner" binding:"required"`
 	Currency string `json:"currency" binding:"required,currency"`
 }
 
@@ -23,9 +24,10 @@ func (server *Server) createAccount(ctx *gin.Context) {
 		return
 	}
 
-	arg := db.CreateAccountParams {
-		Owner: req.Owner,
-		Balance: 0,
+	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.Payload)
+	arg := db.CreateAccountParams{
+		Owner:    authPayload.Username,
+		Balance:  0,
 		Currency: req.Currency,
 	}
 
@@ -67,11 +69,16 @@ func (server *Server) getAccount(ctx *gin.Context) {
 		return
 	}
 
+	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.Payload)
+	if authPayload.Username != account.Owner {
+		ctx.JSON(http.StatusForbidden, errorResponse(fmt.Errorf("%s is not the owner of account %d", authPayload.Username, account.ID)))
+		return
+	}
 	ctx.JSON(http.StatusOK, account)
 }
 
 type listAccountsRequest struct {
-	PageID int32 `form:"page_id" binding:"required,min=1"`
+	PageID   int32 `form:"page_id" binding:"required,min=1"`
 	PageSize int32 `form:"page_size" binding:"required,min=5,max=10"`
 }
 
@@ -82,9 +89,11 @@ func (server *Server) listAccounts(ctx *gin.Context) {
 		return
 	}
 
-	accounts, err := server.store.ListAccounts(ctx, db.ListAccountsParams{ 
-		Limit: int64(req.PageSize),
-		Offset: (int64(req.PageID - 1) * int64(req.PageSize)),
+	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.Payload)
+	accounts, err := server.store.ListAccounts(ctx, db.ListAccountsParams{
+		Owner: authPayload.Username,
+		Limit:  int64(req.PageSize),
+		Offset: (int64(req.PageID-1) * int64(req.PageSize)),
 	})
 
 	if err != nil {
@@ -117,7 +126,7 @@ func (server *Server) updateAccount(ctx *gin.Context) {
 	}
 
 	account, err := server.store.UpdateAccount(ctx, db.UpdateAccountParams{
-		ID: uri.ID,
+		ID:      uri.ID,
 		Balance: body.NewBalance,
 	})
 	if err != nil {

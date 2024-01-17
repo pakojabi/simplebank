@@ -27,24 +27,23 @@ func addAuthorization(
 	request.Header.Set(authorizationHeaderKey, authorizationHeader)
 }
 
-
-func TestAuthMiddleware(t *testing.T){
-	testCases := []struct{
-		name string
-		setupAuth func(t *testing.T, request *http.Request, tokenMaker token.Maker)
+func TestAuthMiddleware(t *testing.T) {
+	testCases := []struct {
+		name          string
+		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
 		checkResponse func(t *testing.T, recorder *httptest.ResponseRecorder)
 	}{
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationBearerType, "user", time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, "user", time.Minute)
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusOK, recorder.Code)
 			},
 		},
 		{
-			name: "NoAuthorization",
+			name:      "NoAuthorization",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusUnauthorized, recorder.Code)
@@ -73,7 +72,7 @@ func TestAuthMiddleware(t *testing.T){
 		{
 			name: "ExpiredToken",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationBearerType, "user", -time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, "user", -time.Minute)
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusUnauthorized, recorder.Code)
@@ -92,12 +91,12 @@ func TestAuthMiddleware(t *testing.T){
 			server.router.GET(
 				authPath,
 				authMiddleware(server.tokenMaker),
-				func (ctx *gin.Context) {
+				func(ctx *gin.Context) {
 					ctx.JSON(http.StatusOK, gin.H{})
 				},
 			)
 
-			//make a request to this newly created 
+			//make a request to this newly created
 			recorder := httptest.NewRecorder()
 			request, err := http.NewRequest(http.MethodGet, "/auth", nil)
 			require.NoError(t, err)
