@@ -21,6 +21,7 @@ func main() {
 	if err != nil {
 		log.Fatal("cannot connect to db:", err)
 	}
+	log.Default().Printf("Connected to %s using driver %s", config.DBSource, config.DBDriver)
 	
 	store := db.NewStore(conn)
 
