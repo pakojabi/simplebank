@@ -52,7 +52,7 @@ func TestTransferTx(t *testing.T) {
 		require.Equal(t, account2.ID, transfer.ToAccountID)
 		require.Equal(t, amount, transfer.Amount)
 		require.NotZero(t, transfer.ID)
-		require.NotZero(t, transfer.CreatedAt)
+		require.False(t, transfer.CreatedAt.IsZero())
 
 		_, err = store.GetTransfer(context.Background(), transfer.ID)
 		require.NoError(t, err)

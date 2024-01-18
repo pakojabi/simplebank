@@ -25,7 +25,7 @@ func createTestAccount(t *testing.T, owner string, currency string, balance int6
 	require.Equal(t, arg.Currency, account.Currency)
 
 	require.NotZero(t, account.ID)
-	require.NotZero(t, account.CreatedAt)
+	require.False(t, account.CreatedAt.IsZero())
 
 	return account
 

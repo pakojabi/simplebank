@@ -19,7 +19,7 @@ func createTestEntry(t *testing.T, account *Account, amount int64) Entry {
 	require.Equal(t, args.Amount, entry.Amount)
 	require.Equal(t, args.AccountID, entry.AccountID)
 	require.NotZero(t, entry.ID)
-	require.NotZero(t, entry.CreatedAt)
+	require.False(t, entry.CreatedAt.IsZero())
 
 	return entry
 }

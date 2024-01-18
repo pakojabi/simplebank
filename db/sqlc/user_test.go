@@ -49,8 +49,8 @@ func createTestUser(t *testing.T, username string, hashed_password string, full_
 	require.Equal(t, arg.FullName, user.FullName)
 	require.Equal(t, arg.Email, user.Email)
 
-	require.NotZero(t, user.CreatedAt)
-	require.Zero(t, user.PasswordChangedAt)
+	require.False(t, user.CreatedAt.IsZero())
+	require.True(t, user.PasswordChangedAt.IsZero())
 
 	return user
 }
