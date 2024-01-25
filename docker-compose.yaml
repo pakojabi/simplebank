@@ -17,5 +17,11 @@ services:
     environment:
       - DB_SOURCE=postgresql://root:postgres123@postgres:5432/simple_bank?sslmode=disable
       - GIN_MODE=release
- 
-
+    depends_on:
+      - postgres
+    entrypoint:
+      - "/app/wait-for.sh"
+      - "postgres:5432"
+      - "--"
+      - "/app/start.sh"
+    command: [ "/app/main" ]
