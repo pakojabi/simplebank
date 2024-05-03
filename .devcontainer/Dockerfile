@@ -7,6 +7,8 @@ FROM mcr.microsoft.com/devcontainers/go:1-1.21-bullseye
 USER vscode
 RUN curl -L https://github.com/golang-migrate/migrate/releases/download/v4.17.0/migrate.linux-amd64.tar.gz | tar xvz
 RUN sudo mv migrate /usr/bin/migrate
+RUN go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest
+RUN go install go.uber.org/mock/mockgen@latest
 
 # [Optional] Uncomment the next lines to use go get to install anything else you need
 # USER vscode
