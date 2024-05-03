@@ -29,15 +29,15 @@ func NewJWTMaker(secretKey string) (Maker, error) {
 }
 
 // Make produces a new token with the given duration for the given username
-func (m *JWTMaker) Make(username string, duration time.Duration) (string, error) {
+func (m *JWTMaker) Make(username string, duration time.Duration) (string, *Payload, error) {
 	payload, err := NewPayload(username, duration)
 	if err != nil {
-		return "", err
+		return "", payload, err
 	}
 
 	jwtToken := jwt.NewWithClaims(jwt.SigningMethodHS256, NewJWTPayloadClaims(payload))
 	signedString, err := jwtToken.SignedString([]byte(m.secretKey))
-	return signedString, err
+	return signedString, payload, err
 }
 
 func NewJWTPayloadClaims(payload *Payload) *JWTPayloadClaims {
