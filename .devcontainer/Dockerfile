@@ -13,6 +13,7 @@ RUN go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest
 RUN go install go.uber.org/mock/mockgen@latest
 RUN go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.28
 RUN go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2
+RUN mkdir -p ~/.local/bin && wget -qO- https://github.com/ktr0731/evans/releases/download/v0.10.11/evans_linux_amd64.tar.gz | tar xvz -C ~/.local/bin/
 # [Optional] Uncomment the next lines to use go get to install anything else you need
 # USER vscode
 # RUN go get -x <your-dependency-or-tool>
