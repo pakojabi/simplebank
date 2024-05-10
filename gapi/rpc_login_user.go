@@ -7,12 +7,18 @@ import (
 	db "github.com/pakojabi/simplebank/db/sqlc"
 	"github.com/pakojabi/simplebank/pb"
 	"github.com/pakojabi/simplebank/util"
+	"github.com/pakojabi/simplebank/val"
+	"google.golang.org/genproto/googleapis/rpc/errdetails"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 func (server *Server) LoginUser(ctx context.Context, req *pb.LoginUserRequest) (*pb.LoginUserResponse, error) {
+	if violations := validateLoginUserRequest(req); violations != nil {
+		return nil, invalidArgumentError(violations)
+	}
+
 	user, err := server.store.GetUser(ctx, req.GetUsername())
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -59,4 +65,27 @@ func (server *Server) LoginUser(ctx context.Context, req *pb.LoginUserRequest) (
 	}
 
 	return rsp, nil
+}
+
+func validateLoginUserRequest(req *pb.LoginUserRequest) (violations []*errdetails.BadRequest_FieldViolation) {
+	validators := []validator{
+		{
+			val.ValidateUsername,
+			req.GetUsername,
+			"username",
+		},
+		{
+			val.ValidatePassword,
+			req.GetPassword,
+			"password",
+		},
+	}
+
+	for _, validator := range validators {
+		if err := validator.validatorFunc(validator.fieldGetter()); err != nil {
+			violations = append(violations, fieldViolation(validator.fieldName, err))
+		}
+	}
+
+	return violations
 }
