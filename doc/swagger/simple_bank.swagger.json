@@ -21,6 +21,8 @@
   "paths": {
     "/v1/create_user": {
       "post": {
+        "summary": "create user",
+        "description": "Creates a new user",
         "operationId": "SimpleBank_CreateUser",
         "responses": {
           "200": {
@@ -53,6 +55,8 @@
     },
     "/v1/login_user": {
       "post": {
+        "summary": "logs a user in",
+        "description": "Starts a Session for the user",
         "operationId": "SimpleBank_LoginUser",
         "responses": {
           "200": {
