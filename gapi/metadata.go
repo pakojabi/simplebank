@@ -2,7 +2,6 @@ package gapi
 
 import (
 	"context"
-	"log"
 
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/peer"
